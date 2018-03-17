@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>通讯录</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+    <div id="app">
+        <!-- 头部组件 -->
+        <my-header :custom-title="title" custom-fixed>
+            <button slot="left" @touchstart='backBtn'>返回</button>
+            <button slot="right" @touchstart='backIndex'>主页</button>
+        </my-header>
+        <!-- 列表组件 -->
+        <my-list :user-data='userData'></my-list>
+        <!-- 弹窗组件 -->
+        <my-alert :custom-title='customTitle' style="display:none">
+            <button @touchstart='confirmBtn'>确认</button>
+            <button @touchstart='cancelBtn'>取消</button>
+        </my-alert>
+    </div>
+
+    <script src="./js/vue.min.js"></script>
+    <script>
+        var userData = [{
+                index: 'A',
+                users: [{
+                        name: 'a1',
+                        tel: '18219384431'
+                    },
+                    {
+                        name: 'a2',
+                        tel: '193042344332'
+                    },
+                    {
+                        name: 'a3',
+                        tel: '3242235235235'
+                    },
+                    {
+                        name: 'a4',
+                        tel: '8568567454564'
+                    },
+                    {
+                        name: 'a5',
+                        tel: '4533452426346'
+                    }
+                ]
+            },
+            {
+                index: 'B',
+                users: [{
+                        name: 'b1',
+                        tel: '23423545455'
+                    },
+                    {
+                        name: 'b2',
+                        tel: '45645632346'
+                    },
+                    {
+                        name: 'b3',
+                        tel: '68845463456'
+                    },
+                    {
+                        name: 'b4',
+                        tel: '99834554344'
+                    },
+                    {
+                        name: 'b5',
+                        tel: '88785567567'
+                    },
+                ]
+            },
+            {
+                index: 'C',
+                users: [{
+                        name: 'c1',
+                        tel: '23344234235'
+                    },
+                    {
+                        name: 'c2',
+                        tel: '3563563456'
+                    },
+                    {
+                        name: 'c3',
+                        tel: '89797685676'
+                    },
+                    {
+                        name: 'c4',
+                        tel: '77455644576'
+                    },
+                    {
+                        name: 'c5',
+                        tel: '33345352525'
+                    },
+                ]
+            },
+            {
+                index: 'D',
+                users: [{
+                        name: 'd1',
+                        tel: '18219384431'
+                    },
+                    {
+                        name: 'd2',
+                        tel: '08342152345'
+                    },
+                    {
+                        name: 'd3',
+                        tel: '43222345455'
+                    },
+                    {
+                        name: 'd4',
+                        tel: '18219384431'
+                    },
+                    {
+                        name: 'd5',
+                        tel: '52345656345'
+                    },
+                ]
+            },
+            {
+                index: 'E',
+                users: [{
+                        name: 'e1',
+                        tel: '18219384431'
+                    },
+                    {
+                        name: 'e2',
+                        tel: '33424234234'
+                    },
+                    {
+                        name: 'e3',
+                        tel: '54466663333'
+                    },
+                    {
+                        name: 'e4',
+                        tel: '18219384431'
+                    },
+                    {
+                        name: 'e5',
+                        tel: '87856567567'
+                    },
+                ]
+            }
+        ]
+        // 头部组件
+        Vue.component('my-header', {
+            template: `
+            <div id="header" :style="{'position':customFixed ? 'fixed' : 'absolute'}">
+                <slot name='left'></slot>
+                {{customTitle}}
+                <slot name='right'></slot>
+            </div>
+            `,
+            props: {
+                'customTitle': {
+                    type: String,
+                    default: '标题'
+                },
+                'customFixed': {
+                    type: Boolean,
+                    default: true
+                }
+            }
+        });
+        // list组件
+        Vue.component('my-list', {
+            template: `
+            <div id="list">
+                    <ul class="list_user" ref='listUser' @touchmove = 'bMove = true'>
+                    <li v-for='item in userData'>
+                    <p>{{item.index}}</p>
+                    <ul>
+                        <li v-for='user in item.users' @touchend='showTel(user.tel)'>
+                        {{user.name}}
+                        </li>
+                        </ul>
+                    </li>
+                    </ul>
+                    <ul class="list_index" ref='listIndex'>
+                       <li v-for='item in userIndex' @touchstart='setScroll($event)'>
+                       {{item}}
+                       </li>
+                    </ul>
+                </div>
+            `,
+            props: {
+                'user-data': Array,
+                default: function () {
+                    return []
+                }
+            },
+            data() {
+                return {
+                    bMove: false
+                }
+            },
+            computed: {
+                //渲染右边list
+                userIndex() {
+                    return this.filterIndex(this.userData)
+                }
+            },
+            methods: {
+                //渲染右边list
+                filterIndex(data) {
+                    var result = [];
+                    for (var i = 0; i < data.length; i++) {
+                        if (data[i].index) {
+                            result.push(data[i].index)
+                        }
+                    }
+                    return result;
+                },
+                setListIndexPos() {
+                    //设置右边list 动态居中
+                    var iH = this.$refs.listIndex.offsetHeight;
+                    this.$refs.listIndex.style.marginTop = -iH / 2 + 'px';
+                },
+                setScroll(ev) {
+                    //根据点击的字母 来匹配list中的对应标签。然后把对应的offsetTop赋值给滚动条高度
+                    var aP = this.$refs.listUser.getElementsByTagName('p');
+                    for (var i = 0; i < aP.length; i++) {
+                        if (aP[i].innerHTML == ev.target.innerText) {
+                            document.documentElement.scrollTop = aP[i].offsetTop;
+                        }
+                    }
+                },
+                showTel(tel) {
+                    // 避免滑动和点击的冲突
+                    if (!this.bMove) {
+                        //用$emit传递
+                        busVM.$emit('changeEvent', tel)
+                    } else {
+                        this.bMove = false;
+                    }
+                }
+            },
+            mounted() {
+                this.setListIndexPos();
+            }
+        });
+        // 通过一个空实例 来完成组件之间的通信
+        var busVM = new Vue();
+
+        //弹窗组件
+        Vue.component('my-alert', {
+            template: `
+            <div id="alert" ref='alertBox'>
+                    <div class="alert_content">
+                        <div class="alert_title">{{customTitle}}</div>
+                        <div class="alert_body">{{telNumber}}</div>
+                        <div class="alert_button">
+                        <slot></slot>
+                        </div>
+                    </div>
+                </div>
+            `,
+            props: {
+                'customTitle': String,
+                default: '弹窗'
+            },
+            data() {
+                return {
+                    telNumber: ''
+                }
+            },
+            mounted() {
+                //用$on来接收
+                busVM.$on('changeEvent', (tel) => {
+                    this.telNumber = tel;
+                    this.$refs.alertBox.style.display = 'block';
+                })
+            },
+        })
+        var vm = new Vue({
+            el: "#app",
+            data() {
+                return {
+                    userData: userData,
+                    title: '通讯录',
+                    customTitle: '弹窗'
+                }
+            },
+            methods: {
+                backBtn() {
+                    console.log('back')
+                },
+                backIndex() {
+                    console.log('index')
+                },
+                confirmBtn() {},
+                cancelBtn() {
+                    // $el 表示最外层容器
+                    this.$children[2].$el.style.display = 'none';
+                },
+            }
+        })
+    </script>
+</body>
+
+</html>
